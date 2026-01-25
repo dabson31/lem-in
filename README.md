@@ -10,6 +10,7 @@ A graph-based optimization problem where n ants must traverse from a start room 
 - Each room (except start/end) holds only one ant per turn
 - Each tunnel is usable once per turn
 - Minimize total traversal time by distributing ants across multiple disjoint paths
+- The graphs are weightless and undirected; the tunnels are bidirectional.
 
 ## Input Format
 
