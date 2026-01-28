@@ -14,10 +14,3 @@ func (g *Graph) AddVertex (k int) {
 	g.Vertices = append(g.Vertices, &Vertex{Key: k})
 }
 
-
-// graph structure
-// vertex structure
-
-// add vertex
-// add edge
-
