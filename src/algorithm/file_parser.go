@@ -1,8 +1,7 @@
-package main
+package algorithm
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -13,8 +12,7 @@ type Room struct {
 	X_coord int
 	Y_coord int
 }
-
-func parseInput(fileInput string) (int, []Room, []string, error) {
+func ParseInput(fileInput string) (int, []Room, []string, error) {
 	lines := strings.Split(fileInput, "\n")
 
 	var ants int
@@ -23,6 +21,12 @@ func parseInput(fileInput string) (int, []Room, []string, error) {
 
 	antsDone := false
 	dashLink := false
+
+	if len(fileInput) < 1 || strings.TrimSpace(fileInput) == "" {
+		return 0, nil, nil, fmt.Errorf("Error: the file being read from is empty.")
+	}
+
+	// the second line
 
 	for i := 0; i < len(lines); i++ {
 		line := strings.TrimSpace(lines[i])
@@ -56,21 +60,31 @@ func parseInput(fileInput string) (int, []Room, []string, error) {
 			return 0, nil, nil, fmt.Errorf("invalid room definition: %s", line)
 		}
 
-		ID, _ := strconv.Atoi(roomParts[0])
-		X_coord, _ := strconv.Atoi(roomParts[1])
-		Y_coord, _ := strconv.Atoi(roomParts[2])
-
+		ID, err := strconv.Atoi(roomParts[0])
+		if err != nil {
+			return 0, nil, nil, fmt.Errorf("Error: Could not parse ID to an integer value: %v", err)
+		}
+		X_coord, err := strconv.Atoi(roomParts[1])
+		if err != nil {
+			return 0, nil, nil, fmt.Errorf("Error: Could not parse x_coord to an integer value: %v", err)
+		}
+		Y_coord, err := strconv.Atoi(roomParts[2])
+		if err != nil {
+			return 0, nil, nil, fmt.Errorf("Error: Could not parse y_coord to an integer value: %v", err)
+		}
 		rooms = append(rooms, Room{ID: ID, X_coord: X_coord, Y_coord: Y_coord})
 	}
 
 	return ants, rooms, roomLinks, nil
 }
 
-func readText(file string) (string, error) {
+//! I am not entirely sure whether this is necessary or not really, but it may be
+
+func ReadText(file string) (string, error) {
 
 	text, err := os.ReadFile(file)
 	if err != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("Error: could not read from file [%v]; %v", file, err)
 	}
 
 	return string(text), nil

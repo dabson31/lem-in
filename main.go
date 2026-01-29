@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"lem-in/src/algorithm"
 	"log"
 	"os"
-	//"lem-in/src/graphs"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	antsNum, rooms, roomLinks, err := parseInput(string(text))
+	antsNum, rooms, roomLinks, err := algorithm.ParseInput(string(text))
 	if err != nil {
 		log.Fatal(err)
 	}
