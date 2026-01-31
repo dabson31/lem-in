@@ -15,17 +15,12 @@ import (
 
 func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom string, tunnel_connections map[string][]string, err error) {
 
-	
-	var (
-		startRooms string 
-		endRooms string
-		nextRoom string = ""
-	)
+
+	roomType := ""
 	startFlagSwitch := false
 	endFlagSwitch := false
 	seenRoom := make(map[string]bool)
 	anthill := make(map[string][]string)
-
 
 	lines := strings.Split(fileInput, "\n")
 
@@ -37,7 +32,7 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 		return 0, "", "", nil, fmt.Errorf("Error: invalid formtting.")
 	}
 
-	trimmed := strings.TrimSpace(lines[1])
+	trimmed := strings.TrimSpace(lines[0])
 	firstLineChecker, err := strconv.Atoi(trimmed)
 
 	if err != nil {
@@ -45,7 +40,26 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	}
 
 	for i := 1; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
 
+		if line == "" {
+			continue
+		}
+
+		if line == "##start" {
+			// logic
+			continue
+		}
+
+		if line == "##end" {
+			// logic
+			continue
+		}
+
+		// maybe ill turn this into a switch statement
+		if strings.HasPrefix(line, "#") || strings.HasSuffix(line, "#")  {
+
+		}
 	}
 
 	return 0, "", "", nil, nil
