@@ -22,7 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	antsNum, rooms, roomLinks, err := algorithm.ParseInput(string(text))
+	antsNum, rooms, roomLinks, err := algorithm.ParseInputs(string(text))
 	if err != nil {
 		log.Fatal(err)
 	}
