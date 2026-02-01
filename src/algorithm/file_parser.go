@@ -21,15 +21,14 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	endFlagSwitch := false
 	seenRoom := make(map[string]bool)
 	anthill := make(map[string][]string)
-
 	// loop variables
 	seenTunnels := make(map[string]map[string]bool)
 	lines := strings.Split(fileInput, "\n")
 
+	// the following two if statements are somewhat "restricted", but it allows for better control and error checking 
 	if len(fileInput) < 1 || strings.TrimSpace(fileInput) == "" {
 		return 0, "", "", nil, fmt.Errorf("Error: the file being read from is empty.")
 	}
-
 	if strings.TrimSpace(lines[1]) != "##start" {
 		return 0, "", "", nil, fmt.Errorf("Error: invalid formtting.")
 	}
