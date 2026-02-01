@@ -22,6 +22,8 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	seenRoom := make(map[string]bool)
 	anthill := make(map[string][]string)
 
+	// loop variables
+	seenTunnels := make(map[string]map[string]bool)
 	lines := strings.Split(fileInput, "\n")
 
 	if len(fileInput) < 1 || strings.TrimSpace(fileInput) == "" {
@@ -45,26 +47,44 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 		if line == "" {
 			continue
 		}
-
+		
 		if line == "##start" {
-			// logic
+			if startFlagSwitch {
+				return 0, "", "", nil, fmt.Errorf("Error: duplicate ##start found")
+			}
+			// next toom is the start room; contains values pertaining to that
+			startFlagSwitch = true
+			roomType = "start"
 			continue
 		}
 
 		if line == "##end" {
-			// logic
+			if endFlagSwitch {
+				return 0, "", "", nil, fmt.Errorf("Error: duplicate ##end found")
+			}
+			endFlagSwitch = true
+			roomType = "end"
 			continue
 		}
 
-		// maybe ill turn this into a switch statement
+		// maybe ill turn this into a switch statement and to a return condition
 		if strings.HasPrefix(line, "#") || strings.HasSuffix(line, "#")  {
+			return 0, "", "", nil, fmt.Errorf("Error: duplicate comments were found.\nProgram terminated early.")
+		}
 
+		if strings.Contains(line, "-") {
+			err := splitTunnels(line, anthill, seenTunnels)
+			if err != nil {
+				return 0, "", "", nil, fmt.Errorf("Error: could not split the tunnels; %v", err)
+			}
+			continue
 		}
 	}
+	// here is the main parsing after checking everything
 
 	return 0, "", "", nil, nil
 }
-
+//! ignore this:
 // func ParseInput(fileInput string) (int, []Room, []string, error) {
 // 	lines := strings.Split(fileInput, "\n")
 

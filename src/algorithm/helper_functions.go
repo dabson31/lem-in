@@ -5,16 +5,6 @@ import (
 	"strings"
 )
 
-// here, well check for duplicate rooms
-func doesRoomExists(rooms []string, duplicate string) bool {
-	for _, room := range rooms {
-		if room == duplicate {
-			return true
-		}
-	}
-	return false
-}
-
 func splitTunnels(lines string, antColony map[string][]string, seen map[string]map[string]bool) error {
 
 	//? originally the implementation required looping through the array
@@ -36,6 +26,9 @@ func splitTunnels(lines string, antColony map[string][]string, seen map[string]m
 		seen[secondRoom] = make(map[string]bool)
 	}
 
+	// here we checkif 2 is connected to 0, for example
+	// so if room 0's map does not contain 2, for example, it write it down
+	// and within the map, it becomes true
 	if !seen[firstRoom][secondRoom] {
 		antColony[firstRoom] = append(antColony[firstRoom], secondRoom)
 		seen[firstRoom][secondRoom] = true
