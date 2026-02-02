@@ -1,0 +1,85 @@
+package algorithm
+
+import (
+	"fmt"
+)
+
+// main entry point
+func FindAllShortestDisjointPaths() {
+
+}
+
+// the modified version of BFS which returns only one path
+func BFSSinglePath(start string, end string, graph map[string][]string) ([]string, error) {
+	// in case start and end are the same, there is nothing to proces; early termination
+	if start == end {
+		return []string{start}, nil
+	}
+
+	visited := make(map[string]bool)
+	parent := make(map[string]string)
+	queue := []string{start}
+	visited[start] = true
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue := queue[1:]
+
+		if current == end {
+			// end condition
+			break
+		}
+
+		for _, neighbours := range graph[current] {
+			if !visited[neighbours] {
+				visited[neighbours] = true
+				// parent[C] = A  <- "C, i came from A"
+				parent[neighbours]= current
+				queue = append(queue, neighbours)
+			}
+		}
+	}
+
+	if !visited[end] {
+		return nil, fmt.Errorf("Error: no paths were found from %s to %s", start, end)
+	}
+
+	// so here were implementing the backtracking, starting from the end 
+	path := []string{}
+	currentNode := end
+	for currentNode != "" {
+		// here were adding the "currentNode" which is the last node at start
+		path = append([]string{currentNode}, path...)
+		if currentNode == start {
+			break
+		}
+		currentNode = parent[currentNode]
+	}
+
+	return path, nil
+}
+
+// remove path edges
+func removePathEdges() {
+
+}
+
+// remove a room from neighbors list
+func removeRoom(rooms []string, target string) []string {
+	result := []string{}
+	for _, room := range rooms {
+		if room != target {
+			result = append(result, room)
+		}
+	}
+	return result
+}
+
+// deep copy of the graph for mutation 
+func copyGraph(graph map[string][]string) map[string][]string {
+	graphCopy := make(map[string][]string)
+	for room, neighbours := range graph {
+		graphCopy[room] = append([]string{}, neighbours...)
+	}
+	return graph
+}

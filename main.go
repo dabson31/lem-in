@@ -5,6 +5,7 @@ import (
 	"lem-in/src/algorithm"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
@@ -20,6 +21,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	startTimer := time.Now()
 
 	antsNum, startRoom, endRoom, tunnel_connections, err := algorithm.ParseInputs(string(text))
 	if err != nil {
@@ -38,4 +41,5 @@ func main() {
 
 	fmt.Println(paths)
 
+	fmt.Printf("time elapsed: %v\n", time.Since(startTimer))
 }
