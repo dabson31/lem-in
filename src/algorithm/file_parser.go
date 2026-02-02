@@ -15,7 +15,6 @@ import (
 
 func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom string, tunnel_connections map[string][]string, err error) {
 
-
 	roomType := ""
 	startFlagSwitch := false
 	endFlagSwitch := false
@@ -25,7 +24,7 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	seenTunnels := make(map[string]map[string]bool)
 	lines := strings.Split(fileInput, "\n")
 
-	// the following two if statements are somewhat "restricted", but it allows for better control and error checking 
+	// the following two if statements are somewhat "restricted", but it allows for better control and error checking
 	if len(fileInput) < 1 || strings.TrimSpace(fileInput) == "" {
 		return 0, "", "", nil, fmt.Errorf("Error: the file being read from is empty.")
 	}
@@ -39,14 +38,18 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	if err != nil {
 		return 0, "", "", nil, fmt.Errorf("Error: invalid formtting.\nFirst line could not be converted into an integer; %v.", firstLineChecker)
 	}
+	numAnts = firstLineChecker
 
 	for i := 1; i < len(lines); i++ {
 		line := strings.TrimSpace(lines[i])
-
 		if line == "" {
 			continue
 		}
-		
+
+		// once we find the first two commands, we set their bool to true respectively
+		// if there are any duplicate commands we return an error just to make extra sure
+		// that there will be no errors within the parsing logic
+		// we ignore comments that start with a single #
 		if line == "##start" {
 			if startFlagSwitch {
 				return 0, "", "", nil, fmt.Errorf("Error: duplicate ##start found")
@@ -56,7 +59,6 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 			roomType = "start"
 			continue
 		}
-
 		if line == "##end" {
 			if endFlagSwitch {
 				return 0, "", "", nil, fmt.Errorf("Error: duplicate ##end found")
@@ -65,24 +67,74 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 			roomType = "end"
 			continue
 		}
-
-		// maybe ill turn this into a switch statement and to a return condition
-		if strings.HasPrefix(line, "#") || strings.HasSuffix(line, "#")  {
-			return 0, "", "", nil, fmt.Errorf("Error: duplicate comments were found.\nProgram terminated early.")
+		// comments ignoring
+		if strings.HasPrefix(line, "#") /*|| strings.HasSuffix(line, "#") i dont think we need to handle suffixes too */ {
+			continue
 		}
 
 		if strings.Contains(line, "-") {
+			rooms := strings.Split(line, "-")
+
+			if len(rooms) != 2 {
+				return 0, "", "", nil, fmt.Errorf("Error: invalid tunnel format; %v", line)
+			}
+
+			firstRoom, secondRoom := rooms[0], rooms[1]
+
+			// in case of trying to link rooms that do not exist
+			if seenRoom[firstRoom] == false || seenRoom[secondRoom] == false {
+				return 0, "", "", nil, fmt.Errorf("Error: tunnel references unknown room; %v", line)
+			}
+
 			err := splitTunnels(line, anthill, seenTunnels)
 			if err != nil {
-				return 0, "", "", nil, fmt.Errorf("Error: could not split the tunnels; %v", err)
+				return 0, "", "", nil, err
 			}
 			continue
+		}
+
+		// we're just parsing rooms here in case it's not a tunnel, comment or a command
+		fields := strings.Fields(line)
+		if len(fields) != 3 {
+			return 0, "", "", nil, fmt.Errorf("Error: invalid room definition. [USAGE]: <name> <x coord> <y coord>")
+		}
+
+		roomName := fields[0]
+
+		if seenRoom[roomName] {
+			return 0, "", "", nil, fmt.Errorf("Error: duplicate room found.")
+		}
+		_, err = strconv.Atoi(fields[1])
+		if err != nil {
+			return 0, "", "", nil, fmt.Errorf("Error: invalid x coordinate.")
+		}
+		_, err = strconv.Atoi(fields[2])
+		if err != nil {
+			return 0, "", "", nil, fmt.Errorf("Error: invalid y coordinate.")
+		}
+
+		seenRoom[roomName] = true
+		anthill[roomName] = []string{}
+
+		if roomType == "start" {
+			startRoom = roomName
+			roomType = ""
+		}
+
+		if roomType == "end" {
+			endRoom = roomName
+			roomType = ""
 		}
 	}
 	// here is the main parsing after checking everything
 
-	return 0, "", "", nil, nil
+	if startRoom == "" || endRoom == "" {
+		return 0, "", "", nil, fmt.Errorf("Error: missing start or end room")
+	}
+
+	return numAnts, startRoom, endRoom, anthill, nil
 }
+
 //! ignore this:
 // func ParseInput(fileInput string) (int, []Room, []string, error) {
 // 	lines := strings.Split(fileInput, "\n")
@@ -96,7 +148,6 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 
 // 	startRooms := false
 // 	endRooms := false
-
 
 // 	if len(fileInput) < 1 || strings.TrimSpace(fileInput) == "" {
 // 		return 0, nil, nil, fmt.Errorf("Error: the file being read from is empty.")

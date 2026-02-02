@@ -16,19 +16,26 @@ func main() {
 		return
 	}
 
-
 	text, err := os.ReadFile(args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	antsNum, rooms, roomLinks, err := algorithm.ParseInputs(string(text))
+	antsNum, startRoom, endRoom, tunnel_connections, err := algorithm.ParseInputs(string(text))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println("Number of ants: ", antsNum)
-	fmt.Println("Rooms: ", rooms)
-	fmt.Println("Room Links: ", roomLinks)
+	fmt.Println("Start Room: ", startRoom)
+	fmt.Println("End Room: ", endRoom)
+	fmt.Println("The tunnels: ", tunnel_connections)
+
+	paths, err := algorithm.BFS(startRoom, endRoom, tunnel_connections)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(paths)
 
 }
