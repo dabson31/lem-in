@@ -34,7 +34,7 @@ func main() {
 	fmt.Println("End Room: ", endRoom)
 	fmt.Println("The tunnels: ", tunnel_connections)
 
-	paths, err := algorithm.BFS(startRoom, endRoom, tunnel_connections)
+	paths, err := algorithm.FindAllShortestPaths(startRoom, endRoom, tunnel_connections)
 	if err != nil {
 		log.Fatal(err)
 	}

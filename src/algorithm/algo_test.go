@@ -5,8 +5,23 @@ import (
 )
 
 // main entry point
-func FindAllShortestDisjointPaths() {
+func FindAllShortestPaths(start string, end string, graph map[string][]string) ([][]string, error) {
+	allPossiblePaths := [][]string{}
+	graphCopy := copyGraph(graph)
 
+	for {
+		path, err := BFSSinglePath(start, end, graphCopy)
+		if err != nil {
+			// no more paths weer found
+			break
+		}
+		allPossiblePaths = append(allPossiblePaths, path)
+		removePathEdges(graphCopy, path)
+	}
+	if len(allPossiblePaths) == 0 {
+		return nil, fmt.Errorf("Error: No paths were found from %s to %s", start, end)
+	}
+	return allPossiblePaths, nil
 }
 
 // the modified version of BFS which returns only one path
@@ -60,8 +75,18 @@ func BFSSinglePath(start string, end string, graph map[string][]string) ([]strin
 }
 
 // remove path edges
-func removePathEdges() {
+func removePathEdges(graph map[string][]string, path []string) {
+	for i := 0; i < len(path)-1; i++ {
+		current := path[i]
+		next := path[i+1]
 
+		// remove the next from current's neighbours
+		// and also remove current from next's neighbours
+		// the reason is because they are bidirectional
+		graph[current] = removeRoom(graph[current], next)
+		graph[next] = removeRoom(graph[next], current)
+		
+	}
 }
 
 // remove a room from neighbors list
@@ -81,5 +106,5 @@ func copyGraph(graph map[string][]string) map[string][]string {
 	for room, neighbours := range graph {
 		graphCopy[room] = append([]string{}, neighbours...)
 	}
-	return graph
+	return graphCopy
 }

@@ -29,8 +29,9 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 		return 0, "", "", nil, fmt.Errorf("Error: the file being read from is empty.")
 	}
 	if strings.TrimSpace(lines[1]) != "##start" {
-		return 0, "", "", nil, fmt.Errorf("Error: invalid formtting.")
+		// return 0, "", "", nil, fmt.Errorf("Error: invalid formtting.") 
 	}
+
 
 	trimmed := strings.TrimSpace(lines[0])
 	firstLineChecker, err := strconv.Atoi(trimmed)
