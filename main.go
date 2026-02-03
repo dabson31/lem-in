@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"lem-in/src/algorithm"
+	"lem-in/src/anthill"
 	"log"
 	"os"
 	"time"
@@ -39,7 +40,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(paths)
+	ants := anthill.AntsInPath(antsNum, paths)
+	anthill.SimulateMovement(ants, paths, endRoom)
 
 	fmt.Printf("time elapsed: %v\n", time.Since(startTimer))
 }

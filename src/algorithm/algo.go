@@ -12,12 +12,13 @@ func FindAllShortestPaths(start string, end string, graph map[string][]string) (
 	for {
 		path, err := BFSSinglePath(start, end, graphCopy)
 		if err != nil {
-			// no more paths weer found
+			// no more paths were found
 			break
 		}
 		allPossiblePaths = append(allPossiblePaths, path)
 		removePathEdges(graphCopy, path)
 	}
+
 	if len(allPossiblePaths) == 0 {
 		return nil, fmt.Errorf("Error: No paths were found from %s to %s", start, end)
 	}
@@ -38,7 +39,7 @@ func BFSSinglePath(start string, end string, graph map[string][]string) ([]strin
 
 	for len(queue) > 0 {
 		current := queue[0]
-		queue := queue[1:]
+		queue = queue[1:]
 
 		if current == end {
 			// end condition
@@ -49,7 +50,7 @@ func BFSSinglePath(start string, end string, graph map[string][]string) ([]strin
 			if !visited[neighbours] {
 				visited[neighbours] = true
 				// parent[C] = A  <- "C, i came from A"
-				parent[neighbours]= current
+				parent[neighbours] = current
 				queue = append(queue, neighbours)
 			}
 		}
@@ -59,11 +60,10 @@ func BFSSinglePath(start string, end string, graph map[string][]string) ([]strin
 		return nil, fmt.Errorf("Error: no paths were found from %s to %s", start, end)
 	}
 
-	// so here were implementing the backtracking, starting from the end 
+	// Backtrack from end to start using parent breadcrumbs
 	path := []string{}
 	currentNode := end
 	for currentNode != "" {
-		// here were adding the "currentNode" which is the last node at start
 		path = append([]string{currentNode}, path...)
 		if currentNode == start {
 			break

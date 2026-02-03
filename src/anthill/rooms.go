@@ -1,9 +1,8 @@
-package graphs
+package anthill
 
 // this approach is only good if i am going to use BFS or DFS
 
 type room struct {
-	int
 	name 			string
 	x_coord			int
 	Y_coord			int
@@ -11,15 +10,12 @@ type room struct {
 	occupied		bool
 }
 
-type ant struct {
-	antID			int
-	paths			[]*room
-	intersection 	bool
-	queuedAnts		int
-	pathLength		int
+type Ant struct {
+	antID				int
+	currentRoom			string
+	pathIndex			int
+	currentPosition		int
+	reachedEnd	 		bool
 }
 
-type tunnel struct {
-	
-}
 
