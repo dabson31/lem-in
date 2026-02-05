@@ -19,8 +19,10 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	roomType := ""
 	startFlagSwitch := false
 	endFlagSwitch := false
+	endFirstSwitch := true
 	seenRoom := make(map[string]bool)
 	anthill := make(map[string][]string)
+	seenCoords := make(map[string]bool) // this is for dupe coords
 	// loop variables
 	seenTunnels := make(map[string]map[string]bool)
 	lines := strings.Split(fileInput, "\n")
@@ -41,6 +43,10 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	}
 	numAnts = firstLineChecker
 
+	if numAnts <= 0 {
+		return 0, "", "", nil, errors.New("Error: number of ants cannot be 0 or negative.")
+	}
+
 	if numAnts >= 5000 {
 		return 0, "", "", nil, errors.New("Error: number of ants exceeds the maximum limit of 5000.")
 	}
@@ -59,12 +65,16 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 			if startFlagSwitch {
 				return 0, "", "", nil, errors.New("Error: duplicate ##start found.")
 			}
+			endFirstSwitch = false
 			// next toom is the start room; contains values pertaining to that
 			startFlagSwitch = true
 			roomType = "start"
 			continue
 		}
 		if line == "##end" {
+			if endFirstSwitch {
+				return 0, "", "", nil, errors.New("Error: ##end command found before ##start.")
+			}
 			if endFlagSwitch {
 				return 0, "", "", nil, errors.New("Error: duplicate ##end found.")
 			}
@@ -77,24 +87,26 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 			continue
 		}
 
-		if strings.Contains(line, "-") {
-			rooms := strings.Split(line, "-")
+		// it has to be exactly room1-room2 for tunnels
+		if strings.Count(line, "-") == 1 && !strings.Contains(line, " ") {
 
-			if len(rooms) != 2 {
+			rooms := strings.SplitN(line, "-", 2)
+			firstRoom := rooms[0]
+			secondRoom := rooms[1]
+
+			if firstRoom == "" || secondRoom == "" {
 				return 0, "", "", nil, errors.New("Error: invalid tunnel format.")
 			}
 
-			firstRoom, secondRoom := rooms[0], rooms[1]
-
 			// in case of trying to link rooms that do not exist
-			if seenRoom[firstRoom] == false || seenRoom[secondRoom] == false {
+			if !seenRoom[firstRoom] || !seenRoom[secondRoom] {
 				return 0, "", "", nil, errors.New("Error: tunnel references unknown rooms.")
 			}
 
-			err := splitTunnels(line, anthill, seenTunnels)
-			if err != nil {
+			if err := splitTunnels(line, anthill, seenTunnels); err != nil {
 				return 0, "", "", nil, err
 			}
+
 			continue
 		}
 
@@ -109,14 +121,28 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 		if seenRoom[roomName] {
 			return 0, "", "", nil, errors.New("Error: duplicate room found.")
 		}
-		_, err = strconv.Atoi(fields[1])
+		xCoord, err := strconv.Atoi(fields[1])
 		if err != nil {
 			return 0, "", "", nil, errors.New("Error: invalid x coordinate.")
 		}
-		_, err = strconv.Atoi(fields[2])
+		yCoord, err := strconv.Atoi(fields[2])
 		if err != nil {
 			return 0, "", "", nil, errors.New("Error: invalid y coordinate.")
 		}
+
+		if xCoord < 0 {
+			return 0, "", "", nil, errors.New("Error: x coordinate cannot be negative.")
+		}
+		if yCoord < 0 {
+			return 0, "", "", nil, errors.New("Error: y coordinate cannot be negative.")
+		}
+
+		fullCoords := strconv.Itoa(xCoord) + "," + strconv.Itoa(yCoord)
+
+		if seenCoords[fullCoords] {
+			return 0, "", "", nil, errors.New("Error: duplicate room coordinates.")
+		}
+		seenCoords[fullCoords] = true // if not seen just add it for further checking
 
 		seenRoom[roomName] = true
 		anthill[roomName] = []string{}
