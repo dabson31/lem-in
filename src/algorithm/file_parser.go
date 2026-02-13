@@ -23,7 +23,6 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 	seenRoom := make(map[string]bool)
 	anthill := make(map[string][]string)
 	seenCoords := make(map[string]bool) // this is for dupe coords
-	// loop variables
 	seenTunnels := make(map[string]map[string]bool)
 	lines := strings.Split(fileInput, "\n")
 

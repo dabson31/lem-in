@@ -1,42 +1,55 @@
 package algorithm
 
-import (
-	"fmt"
-	"strings"
-)
+import "errors"
 
-func splitTunnels(lines string, antColony map[string][]string, seen map[string]map[string]bool) error {
-
-	//? originally the implementation required looping through the array
-	//? every time it checks, but using map for tracking allows for O(1) lookup
-
-	splitRooms := strings.Split(lines, "-")
-
-	if len(splitRooms) != 2 {
-		return fmt.Errorf("Error: invalid tunnel format; %v", lines)
+func splitTunnels(line string, anthill map[string][]string, seenTunnels map[string]map[string]bool) error {
+	// Split the tunnel definition (format: "room1-room2")
+	rooms := splitByDash(line)
+	if len(rooms) != 2 {
+		return errors.New("Error: invalid tunnel format")
 	}
 
-	firstRoom, secondRoom := splitRooms[0], splitRooms[1]
+	firstRoom := rooms[0]
+	secondRoom := rooms[1]
 
-	if seen[firstRoom] == nil {
-		seen[firstRoom] = make(map[string]bool)
-	}
-	
-	if seen[secondRoom] == nil {
-		seen[secondRoom] = make(map[string]bool)
+	// Prevent self-loops (room linking to itself)
+	if firstRoom == secondRoom {
+		return errors.New("Error: room cannot link to itself")
 	}
 
-	// here we checkif 2 is connected to 0, for example
-	// so if room 0's map does not contain 2, for example, it write it down
-	// and within the map, it becomes true
-	if !seen[firstRoom][secondRoom] {
-		antColony[firstRoom] = append(antColony[firstRoom], secondRoom)
-		seen[firstRoom][secondRoom] = true
+	// Check for duplicate tunnels
+	if seenTunnels[firstRoom] == nil {
+		seenTunnels[firstRoom] = make(map[string]bool)
+	}
+	if seenTunnels[secondRoom] == nil {
+		seenTunnels[secondRoom] = make(map[string]bool)
 	}
 
-	if !seen[secondRoom][firstRoom] {
-		antColony[secondRoom] = append(antColony[secondRoom], firstRoom)
-		seen[secondRoom][firstRoom] = true
+	// Check if this tunnel already exists (bidirectional check)
+	if seenTunnels[firstRoom][secondRoom] || seenTunnels[secondRoom][firstRoom] {
+		return errors.New("Error: duplicate tunnel found")
 	}
+
+	seenTunnels[firstRoom][secondRoom] = true
+	seenTunnels[secondRoom][firstRoom] = true
+
+	anthill[firstRoom] = append(anthill[firstRoom], secondRoom)
+	anthill[secondRoom] = append(anthill[secondRoom], firstRoom)
+
 	return nil
+}
+
+func splitByDash(s string) []string {
+	result := []string{}
+	current := ""
+	for _, char := range s {
+		if char == '-' {
+			result = append(result, current)
+			current = ""
+		} else {
+			current += string(char)
+		}
+	}
+	result = append(result, current)
+	return result
 }
