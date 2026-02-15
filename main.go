@@ -2,71 +2,48 @@ package main
 
 import (
 	"fmt"
-	"lem-in/src/algorithm"
-	"log"
 	"os"
-	"time"
+
+	"lem-in/src/algorithm"
 )
 
 func main() {
-
-	args := os.Args
-
-	if len(args) != 2 {
-		fmt.Println("Usage: go run . examples/[*.txt]")
+	if len(os.Args) != 2 {
+		fmt.Println("ERROR: usage: go run . <input_file>")
 		return
 	}
 
-	text, err := os.ReadFile(args[1])
+	filename := os.Args[1]
+	text, err := algorithm.ReadText(filename)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
-	startTimer := time.Now()
-
-	fmt.Println("=== PARSING INPUT ===")
-	antsNum, startRoom, endRoom, tunnel_connections, err := algorithm.ParseInputs(string(text))
+	numAnts, startRoom, endRoom, anthill, err := algorithm.ParseInputs(text)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("ERROR:", err)
+		return
 	}
 
-	fmt.Println("Number of ants:", antsNum)
-	fmt.Println("Start Room:", startRoom)
-	fmt.Println("End Room:", endRoom)
-	fmt.Println("Graph connections:")
-	for room, neighbors := range tunnel_connections {
-		fmt.Printf("  %s -> %v\n", room, neighbors)
-	}
-	fmt.Println()
-
-	// DEBUG: Check if start and end rooms exist in the graph
-	if _, exists := tunnel_connections[startRoom]; !exists {
-		log.Fatal("ERROR: Start room not found in graph!")
-	}
-	if _, exists := tunnel_connections[endRoom]; !exists {
-		log.Fatal("ERROR: End room not found in graph!")
+	// Extract all shortest paths using BFS
+	paths := algorithm.ExtractShortestPaths(anthill, startRoom, endRoom)
+	if len(paths) == 0 {
+		fmt.Println("ERROR: no paths found from start to end")
+		return
 	}
 
-	fmt.Println("=== FINDING PATHS ===")
-	paths, err := algorithm.FindAllShortestPaths(startRoom, endRoom, tunnel_connections)
-	if err != nil {
-		log.Fatal(err)
+	// Choose disjoint paths (greedy by length)
+	disjointPaths := algorithm.SelectDisjointPaths(paths)
+
+	// Simulate ants on these paths
+	allMoves := algorithm.SimulateAnts(numAnts, disjointPaths, startRoom, endRoom)
+
+	// Print moves in required format
+	algorithm.PrintMoves(allMoves)
+
+	// Optional: verify all ants reached the end
+	if !algorithm.VerifyAllAntsReachedEnd(allMoves, numAnts, endRoom) {
+		fmt.Println("ERROR: some ants did not reach the end")
 	}
-
-	fmt.Printf("Found %d path(s):\n", len(paths))
-	for i, path := range paths {
-		fmt.Printf("  Path %d (%d steps): %v\n", i+1, len(path)-1, path)
-	}
-	fmt.Println()
-
-	fmt.Println("=== SIMULATING ANT MOVEMENT ===")
-	moves := algorithm.SimulateAnts(antsNum, paths, startRoom, endRoom)
-
-	fmt.Printf("Total turns: %d\n", len(moves))
-	fmt.Println()
-
-	fmt.Println("=== ANT MOVEMENTS ===")
-	algorithm.PrintMoves(moves)
-
-	fmt.Printf("\n=== COMPLETED IN: %v ===\n", time.Since(startTimer))
 }
