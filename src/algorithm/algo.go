@@ -42,36 +42,101 @@ func contains(slice []string, s string) bool {
 	return false
 }
 
-// Greedy selection of disjoint paths by length (shortest first)
-func SelectDisjointPaths(paths [][]string) [][]string {
-	disjoint := [][]string{}
-	usedRooms := map[string]bool{}
+// SelectDisjointPathsMaxFlow uses max-flow algorithm but only accepts paths
+// within a reasonable length threshold to avoid long bottleneck paths
+func SelectDisjointPathsMaxFlow(anthill map[string][]string, start, end string) [][]string {
+	if len(anthill) == 0 {
+		return [][]string{}
+	}
 
-	// Sort paths by length ascending
-	for i := 0; i < len(paths)-1; i++ {
-		for j := i + 1; j < len(paths); j++ {
-			if len(paths[j]) < len(paths[i]) {
-				paths[i], paths[j] = paths[j], paths[i]
+	// Build flow network
+	flow := make(map[string]map[string]int)
+	var augmentedPaths [][]string
+	minPathLen := -1
+
+	// Keep finding augmenting paths until none exist
+	for {
+		// Find one augmenting path using BFS
+		augmentingPath := findAugmentingPathBFSOnGraph(anthill, start, end, flow)
+		if augmentingPath == nil {
+			break
+		}
+
+		pathLen := len(augmentingPath) - 1
+
+		// On first path, set the baseline length
+		if minPathLen == -1 {
+			minPathLen = pathLen
+		}
+
+		// Only accept paths that are within +5 of the shortest found so far
+		// This gives us more flexibility to find better combinations
+		if pathLen <= minPathLen+5 {
+			// Update flow on this path
+			for i := 0; i < len(augmentingPath)-1; i++ {
+				u := augmentingPath[i]
+				v := augmentingPath[i+1]
+				
+				if flow[u] == nil {
+					flow[u] = make(map[string]int)
+				}
+				if flow[v] == nil {
+					flow[v] = make(map[string]int)
+				}
+				
+				flow[u][v]++
+				flow[v][u]--
+			}
+
+			augmentedPaths = append(augmentedPaths, augmentingPath)
+		} else {
+			// Path too long, stop searching
+			break
+		}
+	}
+
+	return augmentedPaths
+}
+
+// findAugmentingPathBFSOnGraph finds a path from start to end in the graph
+func findAugmentingPathBFSOnGraph(anthill map[string][]string, start, end string, flow map[string]map[string]int) []string {
+	queue := [][]string{{start}}
+	visited := make(map[string]bool)
+	visited[start] = true
+
+	for len(queue) > 0 {
+		currentPath := queue[0]
+		queue = queue[1:]
+		current := currentPath[len(currentPath)-1]
+
+		if current == end {
+			return currentPath
+		}
+
+		neighbors := anthill[current]
+		if neighbors == nil {
+			neighbors = []string{}
+		}
+
+		for _, neighbor := range neighbors {
+			if !visited[neighbor] {
+				flowValue := 0
+				if flow[current] != nil {
+					flowValue = flow[current][neighbor]
+				}
+
+				// Can use edge if current flow < 1 (capacity is 1)
+				if flowValue < 1 {
+					visited[neighbor] = true
+					newPath := append([]string{}, currentPath...)
+					newPath = append(newPath, neighbor)
+					queue = append(queue, newPath)
+				}
 			}
 		}
 	}
 
-	for _, path := range paths {
-		conflict := false
-		for _, room := range path[1 : len(path)-1] { // exclude start/end
-			if usedRooms[room] {
-				conflict = true
-				break
-			}
-		}
-		if !conflict {
-			disjoint = append(disjoint, path)
-			for _, room := range path[1 : len(path)-1] {
-				usedRooms[room] = true
-			}
-		}
-	}
-	return disjoint
+	return nil // No augmenting path found
 }
 
 type AntMove struct {
@@ -79,116 +144,117 @@ type AntMove struct {
 	Room  string
 }
 
-type AntState struct {
-	CurrentRoom string
-	PathIndex   int
-	StepInPath  int
-	Finished    bool
+type AntPath struct {
+	ID    int
+	Path  []string
+	Step  int
 }
 
-// Main simulation function
+// Main simulation function - dispatch ants gradually (Ahmed's approach)
 func SimulateAnts(numAnts int, paths [][]string, startRoom string, endRoom string) [][]AntMove {
 	if len(paths) == 0 || numAnts == 0 {
 		return [][]AntMove{}
 	}
 
+	// Assign ants to paths
 	pathAssignments := assignAntsToPathsOptimal(numAnts, paths)
 
-	antStates := make([]*AntState, numAnts+1)
-	antID := 1
-	for pathIdx, count := range pathAssignments {
-		for i := 0; i < count; i++ {
-			antStates[antID] = &AntState{
-				CurrentRoom: startRoom,
-				PathIndex:   pathIdx,
-				StepInPath:  0,
-				Finished:    false,
-			}
-			antID++
-		}
-	}
+	var activeAnts []AntPath
+	antIndexPerPath := make([]int, len(paths))
+	finishedCount := 0
+	totalAnts := numAnts
 
 	allMoves := [][]AntMove{}
-	antsFinished := 0
 
-	for antsFinished < numAnts {
+	for finishedCount < totalAnts {
 		turnMoves := []AntMove{}
-		usedRooms := make(map[string]bool)
-		usedEdges := make(map[string]bool)
-		usedRooms[startRoom] = true
+		var stillActive []AntPath
 
-		for id := 1; id <= numAnts; id++ {
-			state := antStates[id]
-			if state.Finished {
-				continue
+		// Move already active ants forward one step
+		for _, ant := range activeAnts {
+			ant.Step++
+			nextRoom := ant.Path[ant.Step]
+			turnMoves = append(turnMoves, AntMove{AntID: ant.ID, Room: nextRoom})
+
+			// Check if ant reached the end
+			if ant.Step == len(ant.Path)-1 {
+				finishedCount++
+			} else {
+				stillActive = append(stillActive, ant)
 			}
+		}
+		activeAnts = stillActive
 
-			path := paths[state.PathIndex]
-			nextStep := state.StepInPath + 1
-			if nextStep >= len(path) {
-				continue
-			}
+		// Dispatch one new ant from each path that has ants left to dispatch
+		for pathIdx := 0; pathIdx < len(paths); pathIdx++ {
+			assignedCount := pathAssignments[pathIdx]
+			dispatchedCount := antIndexPerPath[pathIdx]
 
-			nextRoom := path[nextStep]
-			edgeKey := state.CurrentRoom + "->" + nextRoom
-			roomFree := !usedRooms[nextRoom] || nextRoom == endRoom
-			edgeFree := !usedEdges[edgeKey]
-
-			if roomFree && edgeFree {
-				turnMoves = append(turnMoves, AntMove{AntID: id, Room: nextRoom})
-				usedEdges[edgeKey] = true
-				if nextRoom != endRoom {
-					usedRooms[nextRoom] = true
+			if dispatchedCount < assignedCount {
+				// Create new ant with ID
+				antID := 1
+				for i := 0; i < pathIdx; i++ {
+					antID += pathAssignments[i]
 				}
-				state.CurrentRoom = nextRoom
-				state.StepInPath = nextStep
-				if nextRoom == endRoom {
-					state.Finished = true
-					antsFinished++
+				antID += dispatchedCount + 1
+
+				newAnt := AntPath{
+					ID:   antID,
+					Path: paths[pathIdx],
+					Step: 1,
 				}
+
+				nextRoom := paths[pathIdx][1]
+				turnMoves = append(turnMoves, AntMove{AntID: newAnt.ID, Room: nextRoom})
+
+				// Add to active ants if not at end
+				if newAnt.Step == len(newAnt.Path)-1 {
+					finishedCount++
+				} else {
+					activeAnts = append(activeAnts, newAnt)
+				}
+
+				antIndexPerPath[pathIdx]++
 			}
 		}
 
 		if len(turnMoves) > 0 {
 			allMoves = append(allMoves, turnMoves)
-		} else {
+		} else if len(activeAnts) == 0 {
 			break
 		}
 	}
+
 	return allMoves
 }
 
-// Optimal assignment using minimal turns formula
+// Greedy ant assignment based on Ahmed's approach
+// Assign each ant to the path that currently has the lowest cost
+// Cost = path_length + current_ant_count_on_path
 func assignAntsToPathsOptimal(numAnts int, paths [][]string) []int {
 	numPaths := len(paths)
 	assignments := make([]int, numPaths)
 
-	lengths := make([]int, numPaths)
-	for i := range paths {
-		lengths[i] = len(paths[i]) - 1
-	}
+	// Initialize ant counts for each path
+	pathAntCounts := make([]int, numPaths)
 
-	T := findMinimalTurns(numAnts, lengths)
+	// Assign each ant to the path with lowest cost
+	for antID := 1; antID <= numAnts; antID++ {
+		bestPathIdx := 0
+		minCost := len(paths[0]) + pathAntCounts[0]
 
-	totalAssigned := 0
-	for i := 0; i < numPaths; i++ {
-		ants := T - lengths[i] + 1
-		if ants < 0 {
-			ants = 0
-		}
-		assignments[i] = ants
-		totalAssigned += ants
-	}
-
-	// Adjust if over-assigned
-	for totalAssigned > numAnts {
-		for i := numPaths - 1; i >= 0 && totalAssigned > numAnts; i-- {
-			if assignments[i] > 0 {
-				assignments[i]--
-				totalAssigned--
+		for i := 1; i < numPaths; i++ {
+			cost := len(paths[i]) + pathAntCounts[i]
+			if cost < minCost {
+				minCost = cost
+				bestPathIdx = i
 			}
 		}
+
+		assignments[bestPathIdx]++
+		pathAntCounts[bestPathIdx]++
 	}
+
 	return assignments
 }
 

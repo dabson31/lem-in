@@ -26,15 +26,12 @@ func main() {
 		return
 	}
 
-	// Extract all shortest paths using BFS
-	paths := algorithm.ExtractShortestPaths(anthill, startRoom, endRoom)
-	if len(paths) == 0 {
+	// Use max-flow algorithm directly on the graph to find optimal paths
+	disjointPaths := algorithm.SelectDisjointPathsMaxFlow(anthill, startRoom, endRoom)
+	if len(disjointPaths) == 0 {
 		fmt.Println("ERROR: no paths found from start to end")
 		return
 	}
-
-	// Choose disjoint paths (greedy by length)
-	disjointPaths := algorithm.SelectDisjointPaths(paths)
 
 	// Simulate ants on these paths
 	allMoves := algorithm.SimulateAnts(numAnts, disjointPaths, startRoom, endRoom)
