@@ -26,20 +26,20 @@ func main() {
 		return
 	}
 
-	// Use max-flow algorithm directly on the graph to find optimal paths
+	// use max-flow algorithm directly on the graph to find optimal paths
 	disjointPaths := algorithm.SelectDisjointPathsMaxFlow(anthill, startRoom, endRoom)
 	if len(disjointPaths) == 0 {
 		fmt.Println("ERROR: no paths found from start to end")
 		return
 	}
 
-	// Simulate ants on these paths
+	// simulate ants on these paths
 	allMoves := algorithm.SimulateAnts(numAnts, disjointPaths, startRoom, endRoom)
 
-	// Print moves in required format
+
 	algorithm.PrintMoves(allMoves)
 
-	// Optional: verify all ants reached the end
+	// this is optional, verify all ants reached the end
 	if !algorithm.VerifyAllAntsReachedEnd(allMoves, numAnts, endRoom) {
 		fmt.Println("ERROR: some ants did not reach the end")
 	}

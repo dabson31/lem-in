@@ -15,9 +15,9 @@ type AntPath struct {
 
 // Bfs
 func ExtractShortestPaths(anthill map[string][]string, start, end string) [][]string {
-	// The BFS we have here doesnt track distance/parents, instead it stores
+	// the BFS we have here doesnt track distance/parents, instead it stores
 	// them in the full path in the queue. basically every queue item is one possible
-	// path from start to current node. This makes backtracking unnecessary because
+	// path from start to current node. this makes backtracking unnecessary because
 	// a path is always preserved/complete in the queue.
 
 	type queueItem struct {
