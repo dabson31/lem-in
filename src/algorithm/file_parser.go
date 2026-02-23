@@ -60,7 +60,7 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 		// if there are any duplicate commands we return an error just to make extra sure
 		// that there will be no errors within the parsing logic
 		// we ignore comments that start with a single #
-		if line == "##start" {
+		if strings.ToLower(line) == "##start" {
 			if startFlagSwitch {
 				return 0, "", "", nil, errors.New("Error: duplicate ##start found.")
 			}
@@ -70,7 +70,7 @@ func ParseInputs(fileInput string) (numAnts int, startRoom string, endRoom strin
 			roomType = "start"
 			continue
 		}
-		if line == "##end" {
+		if strings.ToLower(line) == "##end" {
 			if endFirstSwitch {
 				return 0, "", "", nil, errors.New("Error: ##end command found before ##start.")
 			}

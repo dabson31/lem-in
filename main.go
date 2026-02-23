@@ -36,7 +36,6 @@ func main() {
 	// simulate ants on these paths
 	allMoves := algorithm.SimulateAnts(numAnts, disjointPaths, startRoom, endRoom)
 
-
 	algorithm.PrintMoves(allMoves)
 
 	// this is optional, verify all ants reached the end
