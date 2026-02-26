@@ -14,62 +14,55 @@ type AntPath struct {
 }
 
 // Bfs
-func ExtractShortestPaths(anthill map[string][]string, start, end string) [][]string {
-	// the BFS we have here doesnt track distance/parents, instead it stores
-	// them in the full path in the queue. basically every queue item is one possible
-	// path from start to current node. this makes backtracking unnecessary because
-	// a path is always preserved/complete in the queue.
+// func ExtractShortestPaths(anthill map[string][]string, start, end string) [][]string {
+// 	// the BFS we have here doesnt track distance/parents, instead it stores
+// 	// them in the full path in the queue. basically every queue item is one possible
+// 	// path from start to current node. this makes backtracking unnecessary because
+// 	// a path is always preserved/complete in the queue.
 
-	type queueItem struct {
-		Path []string
-	}
+// 	type queueItem struct {
+// 		Path []string
+// 	}
 
-	queue := []queueItem{{Path: []string{start}}} // start queue with start room
+// 	queue := []queueItem{{Path: []string{start}}} // start queue with start room
 
-	var paths [][]string
+// 	var paths [][]string
 
-	for len(queue) > 0 {
-		// pop first element (first come first out (FIFO))
-		item := queue[0]
-		queue = queue[1:]
+// 	for len(queue) > 0 {
+// 		// pop first element (first come first out (FIFO))
+// 		item := queue[0]
+// 		queue = queue[1:]
 
-		current := item.Path[len(item.Path)-1] // current is the last element in the stored path
+// 		current := item.Path[len(item.Path)-1] // current is the last element in the stored path
 
-		// if it reaches the end room, we copy the path
-		// and store it to var paths to use later
-		if current == end {
-			newPath := make([]string, len(item.Path))
-			copy(newPath, item.Path)
-			paths = append(paths, newPath)
-			continue
-		}
+// 		// if it reaches the end room, we copy the path
+// 		// and store it to var paths to use later
+// 		if current == end {
+// 			newPath := make([]string, len(item.Path))
+// 			copy(newPath, item.Path)
+// 			paths = append(paths, newPath)
+// 			continue
+// 		}
 
-		// otherwise, check neighbors of current and expand bfs tree
-		// we only add neighbors that are not already in the path to avoid cycles
-		// we copy the current path before modifying to make sure each path
-		// in the queue is independent and complete, then we push extended path to the queue
+// 		// otherwise, check neighbors of current and expand bfs tree
+// 		// we only add neighbors that are not already in the path to avoid cycles
+// 		// we copy the current path before modifying to make sure each path
+// 		// in the queue is independent and complete, then we push extended path to the queue
 
-		for _, neighbor := range anthill[current] {
-			if !contains(item.Path, neighbor) {
-				newPath := append([]string{}, item.Path...)
-				newPath = append(newPath, neighbor)
-				queue = append(queue, queueItem{Path: newPath})
-			}
-		}
-	}
+// 		for _, neighbor := range anthill[current] {
+// 			if !strings.contains(item.Path, neighbor) {
+// 				newPath := append([]string{}, item.Path...)
+// 				newPath = append(newPath, neighbor)
+// 				queue = append(queue, queueItem{Path: newPath})
+// 			}
+// 		}
+// 	}
 
-	// this returns ALL paths from start to end, not filtered by shortest
-	return paths
-}
+// 	// this returns ALL paths from start to end, not filtered by shortest
+// 	return paths
+// }
 
-func contains(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
+
 
 // this is where we extract multiple seperate paths using max-flow style (Edmonds-Karp)
 // we keep finding paths and updating flow until no more can be found.
